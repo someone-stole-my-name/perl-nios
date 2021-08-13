@@ -1,173 +1,146 @@
 #!/usr/bin/env perl
 use JSON qw(from_json);
-use Mojo::Parameters;
 use Mojolicious::Lite;
-use Test::Deep::NoTest qw(eq_deeply);
+use Data::GUID qw( guid_string );
 
-sub request_has_params {
-    my $h = shift->req->params->to_hash;
-
-    if ( %{$h} ) {
-        foreach ( keys %{$h} ) {
-            return 0 if $h->{$_} eq '';
-        }
-        return 1;
-    }
-    else {
-        return 0;
-    }
-    return 0;
-}
-
-sub params_match_template {
-    my $c = shift;
-
-    my $available_templates = $c->app->static->{index};
-
-    foreach ( keys %{$available_templates} ) {
-        if ( $_ =~ /^.+?\/(.+)\?.+\.json\.ep$/m ) {
-            if ( $1 eq $c->stash('p') ) {
-                if ( $_ =~ /\?(.+)\.json\.ep$/m ) {
-                    my $template_params = Mojo::Parameters->new($1);
-                    if (
-                        eq_deeply(
-                            $template_params->to_hash,
-                            $c->req->params->to_hash
-                        )
-                      )
-                    {
-                        return substr( $_, 0, -8 );
-                    }
-
-                }
-            }
-        }
-
-    }
-
-    return 0;
-}
+my $creds     = { username => "username", password => "password" };
+my @records_a = ();
 
 app->log->level('error');
 
 plugin 'basic_auth';
 
-any '/*p' => sub {
+del '/wapi/v2.7/record:a/*ref' => sub {
     my ($c) = @_;
+    return $c->render( text => "Forbidden", status => 401 )
+      unless $c->basic_auth(
+        realm => sub {
+            return 1
+              if "@_" eq join( " ", $creds->{username}, $creds->{password} );
+        }
+      );
 
-    my $template_name   = "ANY/404";
-    my $template_format = "json";
-
-    if ( !request_has_params($c) and uc $c->req->method eq "GET" ) {
-        $template_name = join( '/', uc $c->req->method, $c->stash('p') );
-    }
-    elsif ( request_has_params($c) and params_match_template($c) ) {
-        $template_name = params_match_template($c);
-    }
-    elsif ( !request_has_params($c)
-        and ( uc $c->req->method eq "POST" or uc $c->req->method eq "PUT" ) )
-    {
-        $template_format = "txt";
-        $template_name   = join( '/', uc $c->req->method, $c->stash('p') );
-
-        my $required_payload = from_json(
-            $c->render_to_string(
-                template => "PAYLOAD/$template_name",
-                format   => 'json'
-            )->to_string
-        );
-
-        $c->render( text => 'bad payload', status => 500 ) and return
-          unless eq_deeply( $c->req->json, $required_payload );
+    my $record_exists    = 0;
+    my $record_exists_at = 0;
+    foreach (@records_a) {
+        print STDERR ("\n\nComparing: " . $_->{_ref} . " and " . "record:a/" . $c->stash('ref')) . "\n\n";
+        if ( $_->{_ref} eq "record:a/" . $c->stash('ref') ) {
+            $record_exists = 1;
+            last;
+        }
+        $record_exists_at++;
     }
 
-    my $template = $c->render_to_string(
-        template => $template_name,
-        format   => $template_format
-    );
+    return $c->render( text => "Not found", status => 404 ) if !$record_exists;
+    splice( @records_a, $record_exists_at, 1 );
+    return $c->render( text => "deleted", status => 200 );
+};
 
-    chomp($template);
-    chomp( my $json = substr( $template, 0, -3 ) );
-    chomp( my $status_code = substr( $template, -3 ) );
+put '/wapi/v2.7/record:a/*ref' => sub {
+    my ($c) = @_;
+    return $c->render( text => "Forbidden", status => 401 )
+      unless $c->basic_auth(
+        realm => sub {
+            return 1
+              if "@_" eq join( " ", $creds->{username}, $creds->{password} );
+        }
+      );
+
+    my $record_exists    = 0;
+    my $record_exists_at = 0;
+    foreach (@records_a) {
+        if ( $_->{_ref} eq "record:a/" . $c->stash('ref') ) {
+            $record_exists = 1;
+            last;
+        }
+        $record_exists_at++;
+    }
+
+    return $c->render( text => "Not found", status => 404 ) if !$record_exists;
+
+    foreach ( keys %{ $c->req->json } ) {
+        $records_a[$record_exists_at]->{$_} = $c->req->json->{$_};
+    }
 
     return $c->render(
-        data   => $json,
-        status => $status_code,
-      )
-      if $c->basic_auth(
-        realm => sub { return 1 if "@_" eq 'username password' } );
+        text   => "\"" . $records_a[$record_exists_at]->{_ref} . "\"",
+        status => 200
+    );
 };
-app->start;
 
-__DATA__
+post '/wapi/v2.7/record:a' => sub {
+    my ($c) = @_;
+    return $c->render( text => "Forbidden", status => 401 )
+      unless $c->basic_auth(
+        realm => sub {
+            return 1
+              if "@_" eq join( " ", $creds->{username}, $creds->{password} );
+        }
+      );
 
-@@ ANY/404.json.ep
-{
-    "code": "404",
-    "text": "Template with parameters not found."
-}404
+    defined $c->req->json->{$_}
+      or return $c->render( text => "Bad Payload", status => 400 )
+      for qw(name ipv4addr);
 
-@@ GET/wapi/v2.7/record:a?_paging=1.json.ep
-{
-    "Error": "AdmConProtoError: _return_as_object needs to be enabled for paging requests.",
-    "code": "Client.Ibap.Proto",
-    "text": "_return_as_object needs to be enabled for paging requests."
-}400
-
-
-@@ GET/wapi/v2.7/record:a.json.ep
-{
-    "Error": "AdmConProtoError: Result set too large (> 1000)",
-    "code": "Client.Ibap.Proto",
-    "text": "Result set too large (> 1000)"
-}400
-
-@@ POST/wapi/v2.7/record:a.txt.ep
-"record:a/ZG5zLmJpbmRfY:rhds.ext.home/default"
-201
-
-@@ PAYLOAD/POST/wapi/v2.7/record:a.json.ep
-{
-	"name":"rhds.ext.home",
-	"ipv4addr":"10.0.0.1",
-    "extattrs": {
-        "Tenant ID": { "value": "home" },
-        "CMP Type": { "value": "OpenStack" },
-        "Cloud API Owned": { "value": "True" }
+    foreach (@records_a) {
+        return $c->render( text => "Conflict", status => 409 )
+          if $_->{name} eq $c->req->json->{name};
     }
-}
 
-@@ PUT/wapi/v2.7/record:a/ZG5zLmJpbmRfY:rhds.ext.home/default.txt.ep
-"record:a/ZG5zLmJpbmRfY:rhds.ext.home/default"
-200
+    $c->req->json->{_ref} =
+      "record:a/" . lc guid_string() . ":" . $c->req->json->{name} . "/default";
 
-@@ PAYLOAD/PUT/wapi/v2.7/record:a/ZG5zLmJpbmRfY:rhds.ext.home/default.json.ep
-{
-	"name":"rhds.ext.home"
-}
+    $c->req->json->{view} = "default";
+    push( @records_a, $c->req->json );
 
-@@ GET/wapi/v2.7/record:a?_paging=1&_max_results=1&_return_as_object=1.json.ep
-{
-    "next_page_id": "789c55904d6ec3201046f",
-    "result": [
-        {
-            "_ref": "record:a/ZG5zLmJpbmRfY:rhds.ext.home/default",
-            "ipv4addr": "10.0.0.1",
-            "name": "rhds.ext.home",
-            "view": "default"
+    $c->render( text => "\"" . $c->req->json->{_ref} . "\"", status => 201 );
+};
+
+get '/wapi/v2.7/record:a' => sub {
+    my ($c) = @_;
+    return $c->render( text => "Forbidden", status => 401 )
+      unless $c->basic_auth(
+        realm => sub {
+            return 1
+              if "@_" eq join( " ", $creds->{username}, $creds->{password} );
         }
-    ]
-}200
+      );
 
-@@ GET/wapi/v2.7/record:a?_paging=1&_max_results=1&_return_as_object=1&_page_id=789c55904d6ec3201046f.json.ep
-{
-    "next_page_id": "789c55904b6ec3300c44f",
-    "result": [
-        {
-            "_ref": "record:a/ZG5zLmJpbmRfYSQ:rhds-1.ext.home/default",
-            "ipv4addr": "10.0.0.2",
-            "name": "rhds-1.ext.home",
-            "view": "default"
-        }
-    ]
-}200
+    if ( !%{ $c->req->params->to_hash } ) {
+        return $c->render(
+            json => {
+                Error => "AdmConProtoError: Result set too large (> 1000)",
+                code  => "Client.Ibap.Proto",
+                text  => "Result set too large (> 1000)"
+            },
+            status => 400
+        );
+    }
+    elsif ( %{ $c->req->params->to_hash }{_paging}
+        and !defined %{ $c->req->params->to_hash }{_return_as_object} )
+    {
+        return $c->render(
+            json => {
+                Error =>
+"AdmConProtoError: _return_as_object needs to be enabled for paging requests.",
+                code => "Client.Ibap.Proto",
+                text =>
+                  "_return_as_object needs to be enabled for paging requests."
+            },
+            status => 400
+        );
+    }
+    elsif ( %{ $c->req->params->to_hash }{_paging}
+        and %{ $c->req->params->to_hash }{_return_as_object} )
+    {
+        return $c->render(
+            json => {
+                next_page_id => "789c55904d6ec3201046f",
+                result       => \@records_a
+            },
+            status => 200
+        );
+    }
+};
+
+app->start;
