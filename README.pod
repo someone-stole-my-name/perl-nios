@@ -1,0 +1,122 @@
+=pod
+
+=encoding UTF-8
+
+=head1 NAME
+
+NIOS - Perl binding for NIOS
+
+=head1 SYNOPSIS
+ 
+    # Read below for a list of options
+    my $n = NIOS->new(
+        username  => "username",
+        password  => "password",
+        wapi_addr => "10.0.0.1",
+    );
+
+
+    $x = $n->get_a_record(
+        params => {
+            _paging           => 1,
+            _max_results      => 1,
+            _return_as_object => 1
+        }
+    );
+    say from_json( $x->decoded_content )->{result}[0]->{_ref};
+
+=head1 DESCRIPTION
+
+Perl bindings for L<https://www.infoblox.com/company/why-infoblox/nios-platform/>
+
+=head1 CONSTRUCTOR
+ 
+=head2 new
+
+    my $n = NIOS->new(
+        username  => "username",
+        password  => "password",
+        wapi_addr => "10.0.0.1",
+    );
+
+=head3 C<< insecure >>
+
+Enable or disable verifying SSL certificates when C<< scheme >> is C<< https >>.
+
+B<Default>: false
+
+=head3 C<< password >>
+
+Specifies the password to use to authenticate the connection to the remote instance of NIOS.
+
+=head3 C<< scheme >>
+
+B<Default>: https
+
+=head3 C<< timeout >>
+
+The amount of time before to wait before receiving a response.
+
+B<Default>: 10
+
+=head3 C<< username >>
+
+Configures the username to use to authenticate the connection to the remote instance of NIOS.
+
+=head3 C<< wapi_addr >>
+
+DNS hostname or address for connecting to the remote instance of NIOS WAPI.
+
+=head3 C<< wapi_version >>
+
+Specifies the version of WAPI to use.
+
+B<Default>: v2.7
+
+=head1 Methods
+
+Methods return an L<HTTP::Response> object.
+
+=head3 C<< create >>
+
+    # Create anew 'a' resources of type 'record':
+    $x = $n->create_a_record(
+        name     => "rhds.ext.home",
+        ipv4addr => "10.0.0.1",
+        extattrs => {
+            "Tenant ID"       => { value => "home" },
+            "CMP Type"        => { value => "OpenStack" },
+            "Cloud API Owned" => { value => "True" }
+        }
+    );
+
+=head3 C<< delete >>
+
+    # Delete a WAPI Object Reference
+    $x = $n->delete(ref => $object_ref);
+
+=head3 C<< get >>
+
+    # List all 'a' resources of type 'record' with:
+    #   pagination
+    #   limiting results to 1
+    #   returning response as an object
+    $x = $n->get_a_record(
+        params => {
+            _paging           => 1,
+            _max_results      => 1,
+            _return_as_object => 1
+        }
+    );
+
+=head3 C<< update >>
+
+    # Update a WAPI Object Reference
+    $x = $n->update(
+        ref => $object_ref,
+        name => "updated_name"
+    );
+
+
+=cut
+
