@@ -133,6 +133,8 @@ __END__
 
 NIOS - Perl binding for NIOS
 
+=for html <a href="https://www.travis-ci.com/someone-stole-my-name/perl-nios"><img src="https://www.travis-ci.com/someone-stole-my-name/perl-nios.svg?branch=master"></a>
+
 =head1 SYNOPSIS
  
     # Read below for a list of options
