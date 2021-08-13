@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/env perl
 use JSON qw(from_json);
 use Mojo::Parameters;
 use Mojolicious::Lite;
