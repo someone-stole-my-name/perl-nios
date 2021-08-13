@@ -1,8 +1,8 @@
 #!/usr/bin/perl
-use Mojolicious::Lite;
-use Mojo::Parameters;
-use Test::Deep::NoTest qw(eq_deeply);
 use JSON qw(from_json);
+use Mojo::Parameters;
+use Mojolicious::Lite;
+use Test::Deep::NoTest qw(eq_deeply);
 
 sub request_has_params {
     my $h = shift->req->params->to_hash;
