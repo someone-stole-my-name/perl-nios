@@ -1,9 +1,11 @@
+## no critic
 package NIOS;
 
 # ABSTRACT: Perl binding for NIOS
 # VERSION
 # AUTHORITY
 
+## use critic
 use warnings;
 use strict;
 
@@ -14,55 +16,47 @@ use MIME::Base64 qw(encode_base64);
 use URI;
 use URI::QueryParam;
 
-BEGIN {
-  no strict 'refs';
-  for
-    my $p (qw(wapi_version username password scheme insecure timeout wapi_addr))
-  {
-    *$p = sub {
-      croak "Too many arguments for $p" if @_ > 1;
-      return shift->{$p};
-    }
-  }
-}
+use constant TIMEOUT => 10; ## no critic (ValuesAndExpressions::ProhibitConstantPragma)
 
 sub new {
   my ( $class, %args ) = @_;
   my $self = bless {}, $class;
 
   $self->{debug} = $args{debug} || $ENV{NIOS_DEBUG};
-  $self->{debug} = 0 if !defined $self->{'debug'};
+  $self->{debug} = 0
+    if !defined $self->{'debug'}; ## no critic (ControlStructures::ProhibitPostfixControls)
 
   defined $args{$_}
     and $self->{$_} = $args{$_}
-    for qw(wapi_version username password scheme insecure timeout wapi_addr);
+    for qw(wapi_version username password scheme insecure timeout wapi_addr); ## no critic (ControlStructures::ProhibitPostfixControls)
 
-  $self->{wapi_version} = 'v2.7'  if !defined $self->{'wapi_version'};
-  $self->{scheme}       = 'https' if !defined $self->{'scheme'};
-  $self->{insecure}     = 0       if !defined $self->{'insecure'};
-  $self->{timeout}      = 10      if !defined $self->{'timeout'};
+  $self->{wapi_version} = 'v2.7'
+    if !defined $self->{'wapi_version'};                                      ## no critic (ControlStructures::ProhibitPostfixControls)
+  $self->{scheme} = 'https'
+    if !defined $self->{'scheme'};                                            ## no critic (ControlStructures::ProhibitPostfixControls)
+  $self->{insecure} = 0
+    if !defined $self->{'insecure'};                                          ## no critic (ControlStructures::ProhibitPostfixControls)
+  $self->{timeout} = TIMEOUT
+    if !defined $self->{'timeout'};                                           ## no critic (ControlStructures::ProhibitPostfixControls)
 
   defined( $self->{$_} )
     or croak("$_ is required!")
-    for qw(username password wapi_addr);
+    for qw(username password wapi_addr);                                      ## no critic (ControlStructures::ProhibitPostfixControls)
 
-  ( ( $self->{scheme} eq "http" ) or ( $self->{scheme} eq "https" ) )
-    or croak( "scheme not supported: " . $self->{scheme} );
+  ( ( $self->{scheme} eq 'http' ) or ( $self->{scheme} eq 'https' ) )
+    or croak("scheme not supported: $self->{scheme}");
 
   $self->{ua} = LWP::UserAgent->new( timeout => $self->{timeout} );
   $self->{ua}->agent( 'NIOS-perl/' . $NIOS::VERSION );
   $self->{ua}->ssl_opts( verify_hostname => 0, SSL_verify_mode => 0x00 )
-    if $self->{insecure} and $self->{scheme} eq "https";
-  $self->{ua}->default_header( "Accept"       => "application/json" );
-  $self->{ua}->default_header( "Content-Type" => "application/json" );
-  $self->{ua}->default_header( "Authorization" => "Basic "
-      . encode_base64( $self->{username} . ":" . $self->{password} ) );
+    if $self->{insecure} and $self->{scheme} eq 'https';                      ## no critic (ControlStructures::ProhibitPostfixControls)
+  $self->{ua}->default_header( 'Accept'       => 'application/json' );
+  $self->{ua}->default_header( 'Content-Type' => 'application/json' );
+  $self->{ua}->default_header( 'Authorization' => 'Basic '
+      . encode_base64("$self->{username}:$self->{password}") );
 
   $self->{base_url} =
-      $self->{scheme} . "://"
-    . $self->{'wapi_addr'}
-    . "/wapi/"
-    . $self->{'wapi_version'} . "/";
+    "$self->{scheme}://$self->{'wapi_addr'}/wapi/$self->{'wapi_version'}/";
 
   return $self;
 }
@@ -71,16 +65,14 @@ sub DESTROY { }
 
 our $AUTOLOAD;
 
-sub AUTOLOAD {
-  my $command = $AUTOLOAD;
-
-  $command =~ s/.*://;
+sub AUTOLOAD { ## no critic (ClassHierarchies::ProhibitAutoloading)
+  ( my $command = $AUTOLOAD ) =~ s/.*://xms;
 
   my $method = sub { shift->__do_cmd( $command, @_ ) };
 
   # Speed up future calls
-  no strict 'refs';
-  *$AUTOLOAD = $method;
+  no strict 'refs';     ## no critic (TestingAndDebugging::ProhibitNoStrict)
+  *$AUTOLOAD = $method; ## no critic (References::ProhibitDoubleSigils)
 
   goto $method;
 }
@@ -89,38 +81,40 @@ sub __do_cmd {
   my ( $self, $command, %args ) = @_;
 
   my %hash;
-  @hash{ "action", "resource", "type" } =
-    $command =~ /^([a-z]+)_?([a-z]+)?_?([a-z]+)?$/;
+  @hash{ 'action', 'resource', 'type' } =
+    $command =~ /^([[:lower:]]+)_?([[:lower:]]+)?_?([[:lower:]]+)?$/xms;
 
-  return $self->__std_cmd( "PUT", %args )
-    if ( $hash{action} and $hash{action} eq "update" )
-    and ( !$hash{resource} and !$hash{type} );
+  return $self->__std_cmd( 'PUT', %args )
+    if ( $hash{action} and $hash{action} eq 'update' )
+    and ( not $hash{resource} and not $hash{type} );
 
-  return $self->__std_cmd( "DELETE", %args )
-    if ( $hash{action} and $hash{action} eq "delete" )
-    and ( !$hash{resource} and !$hash{type} );
+  return $self->__std_cmd( 'DELETE', %args )
+    if ( $hash{action} and $hash{action} eq 'delete' )
+    and ( not $hash{resource} and not $hash{type} );
 
-  $args{ref} = join( ":", $hash{type}, $hash{resource} )
-    and return $self->__std_cmd( "GET", %args )
-    if ( $hash{action} and $hash{action} eq "get" )
+  $args{ref} = join q{:}, $hash{type}, $hash{resource}
+    and return $self->__std_cmd( 'GET', %args )
+    if ( $hash{action} and $hash{action} eq 'get' ) ## no critic (ControlStructures::ProhibitPostfixControls)
     and ( $hash{resource} and $hash{type} );
 
-  $args{ref} = join( ":", $hash{type}, $hash{resource} )
-    and return $self->__std_cmd( "POST", %args )
-    if ( $hash{action} and $hash{action} eq "create" )
+  $args{ref} = join q{:}, $hash{type}, $hash{resource}
+    and return $self->__std_cmd( 'POST', %args )
+    if ( $hash{action} and $hash{action} eq 'create' ) ## no critic (ControlStructures::ProhibitPostfixControls)
     and ( $hash{resource} and $hash{type} );
+
+  return;
 }
 
 sub __std_cmd {
   my ( $self, $op, %args ) = @_;
 
-  my $ref          = delete $args{ref} or croak("ref is required!");
+  my $ref          = delete $args{ref} or croak('ref is required!');
   my $params       = delete $args{params};
-  my $query_params = "";
+  my $query_params = q{};
 
   if ( defined $params ) {
-    my $u = URI->new( "", "http" );
-    $query_params = "?";
+    my $u = URI->new( q{}, 'http' );
+    $query_params = q{?};
     foreach ( keys %{$params} ) {
       $u->query_param( $_ => $params->{$_} );
     }
@@ -130,7 +124,7 @@ sub __std_cmd {
   my $request =
     HTTP::Request->new( $op, $self->{base_url} . $ref . $query_params );
 
-  if ( $op eq "PUT" or $op eq "POST" ) {
+  if ( $op eq 'PUT' or $op eq 'POST' ) {
     $request->content( to_json( \%args ) );
   }
 

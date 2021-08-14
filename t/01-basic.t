@@ -29,7 +29,7 @@ like(
             scheme    => "x"
         )
     },
-    qr/^scheme not supported/,
+    qr/^scheme not supported: x/,
     'Not supported scheme',
 );
 
