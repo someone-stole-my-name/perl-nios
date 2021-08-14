@@ -14,11 +14,35 @@ use Test::SpawnNIOS;
 my $nios = Test::SpawnNIOS->nios();
 END { $nios->shitdown() if $nios }
 
+like(
+    exception { my $n = NIOS->new() },
+    qr/\w+ is required!/,
+    'Missing required connection parameters',
+);
+
+like(
+    exception {
+        my $n = NIOS->new(
+            username  => "x",
+            password  => "x",
+            wapi_addr => "x",
+            scheme    => "x"
+        )
+    },
+    qr/^scheme not supported/,
+    'Not supported scheme',
+);
+
 my $n = NIOS->new(
     username  => "username",
     password  => "password",
     wapi_addr => $nios->addr,
     scheme    => "http"
+);
+
+is(
+    exception { $n->do_something_undefined() },
+    undef, "Undefined method called",
 );
 
 my $x = $n->get_a_record();

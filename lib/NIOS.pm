@@ -14,6 +14,18 @@ use MIME::Base64 qw(encode_base64);
 use URI;
 use URI::QueryParam;
 
+BEGIN {
+  no strict 'refs';
+  for
+    my $p (qw(wapi_version username password scheme insecure timeout wapi_addr))
+  {
+    *$p = sub {
+      croak "Too many arguments for $p" if @_ > 1;
+      return shift->{$p};
+    }
+  }
+}
+
 sub new {
   my ( $class, %args ) = @_;
   my $self = bless {}, $class;
@@ -65,6 +77,10 @@ sub AUTOLOAD {
   $command =~ s/.*://;
 
   my $method = sub { shift->__do_cmd( $command, @_ ) };
+
+  # Speed up future calls
+  no strict 'refs';
+  *$AUTOLOAD = $method;
 
   goto $method;
 }
