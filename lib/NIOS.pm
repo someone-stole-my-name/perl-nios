@@ -98,6 +98,10 @@ sub __do_cmd {
     if ( $hash{action} and $hash{action} eq 'get' ) ## no critic (ControlStructures::ProhibitPostfixControls)
     and ( $hash{resource} and $hash{type} );
 
+  return $self->__std_cmd( 'GET', %args )
+    if ( $hash{action} and $hash{action} eq 'get' ) ## no critic (ControlStructures::ProhibitPostfixControls)
+    and ( not $hash{resource} and not $hash{type} );
+
   return $self->__std_cmd( 'POST', %args )
     if ( $hash{action} and $hash{action} eq 'create' ) ## no critic (ControlStructures::ProhibitPostfixControls)
     and ( $hash{resource} and $hash{type} );
