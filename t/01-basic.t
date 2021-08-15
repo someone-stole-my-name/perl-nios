@@ -33,6 +33,21 @@ like(
     'Not supported scheme',
 );
 
+like(
+    exception {
+        die(
+            NIOS->new(
+                username  => "bad_username",
+                password  => "bad_password",
+                wapi_addr => $nios->addr,
+                scheme    => "http"
+            )->get_a_record()->{_rc}
+        )
+    },
+    qr/^401/,
+    'Basic Auth',
+);
+
 my $n = NIOS->new(
     username  => "username",
     password  => "password",
@@ -105,8 +120,8 @@ $x = $n->get_a_record(
         _return_as_object => 1
     }
 );
-ok( "rhds-1.ext.home" eq from_json( $x->decoded_content )->{result}[0]->{name}
-);
+ok(
+    "rhds-1.ext.home" eq from_json( $x->decoded_content )->{result}[0]->{name} );
 
 ## All done
 done_testing();
