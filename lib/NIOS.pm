@@ -84,6 +84,8 @@ sub __do_cmd {
   @hash{ 'action', 'resource', 'type' } =
     $command =~ /^([[:lower:]]+)_?([[:lower:]]+)?_?([[:lower:]]+)?$/xms;
 
+  $args{ref} = join q{:}, $hash{type}, $hash{resource} unless $args{ref};
+
   return $self->__std_cmd( 'PUT', %args )
     if ( $hash{action} and $hash{action} eq 'update' )
     and ( not $hash{resource} and not $hash{type} );
@@ -92,13 +94,11 @@ sub __do_cmd {
     if ( $hash{action} and $hash{action} eq 'delete' )
     and ( not $hash{resource} and not $hash{type} );
 
-  $args{ref} = join q{:}, $hash{type}, $hash{resource}
-    and return $self->__std_cmd( 'GET', %args )
+  return $self->__std_cmd( 'GET', %args )
     if ( $hash{action} and $hash{action} eq 'get' ) ## no critic (ControlStructures::ProhibitPostfixControls)
     and ( $hash{resource} and $hash{type} );
 
-  $args{ref} = join q{:}, $hash{type}, $hash{resource}
-    and return $self->__std_cmd( 'POST', %args )
+  return $self->__std_cmd( 'POST', %args )
     if ( $hash{action} and $hash{action} eq 'create' ) ## no critic (ControlStructures::ProhibitPostfixControls)
     and ( $hash{resource} and $hash{type} );
 
