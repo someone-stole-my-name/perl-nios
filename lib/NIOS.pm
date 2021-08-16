@@ -13,6 +13,7 @@ use JSON qw(to_json);
 use LWP::UserAgent;
 use MIME::Base64 qw(encode_base64);
 use URI;
+use Role::Tiny;
 use URI::QueryParam;
 
 use Data::Dumper;
@@ -70,13 +71,15 @@ sub update {
   my ( $self, %args ) = @_;
 
   defined( $args{$_} )
-    or croak("$_ is required!") for qw(path payload);
+    or croak("$_ is required!")
+    for qw(path payload);
 
   return $self->__request( 'PUT', $args{path},
     ( payload => $args{payload}, params => $args{params} ) );
 }
 
 sub get {
+  print STDERR Dumper(@_);
   my ( $self, %args ) = @_;
 
   defined( $args{path} )
@@ -153,7 +156,8 @@ NIOS - Perl binding for NIOS
     );
 
 
-    $x = $n->get_a_record(
+    $x = $n->get(
+        path => 'record:a',
         params => {
             _paging           => 1,
             _max_results      => 1,
