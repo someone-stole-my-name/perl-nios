@@ -61,7 +61,8 @@ sub create {
   my ( $self, %args ) = @_;
 
   defined( $args{$_} )
-    or croak("$_ is required!") for qw(path payload);
+    or croak("$_ is required!")
+    for qw(path payload);
 
   return $self->__request( 'POST', $args{path},
     ( payload => $args{payload}, params => $args{params} ) );
