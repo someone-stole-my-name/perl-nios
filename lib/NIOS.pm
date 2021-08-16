@@ -60,7 +60,7 @@ sub create {
   my ( $self, %args ) = @_;
 
   defined( $args{$_} )
-    or croak("$_ is required!") for qw(path payload);    ## no critic (ControlStructures::ProhibitPostfixControls)
+    or croak("$_ is required!") for qw(path payload);
 
   return $self->__request( 'POST', $args{path},
     ( payload => $args{payload}, params => $args{params} ) );
@@ -70,7 +70,7 @@ sub update {
   my ( $self, %args ) = @_;
 
   defined( $args{$_} )
-    or croak("$_ is required!") for qw(path payload);    ## no critic (ControlStructures::ProhibitPostfixControls)
+    or croak("$_ is required!") for qw(path payload);
 
   return $self->__request( 'PUT', $args{path},
     ( payload => $args{payload}, params => $args{params} ) );
