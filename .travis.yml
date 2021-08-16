@@ -8,6 +8,7 @@ before_install:
   - "git config --global github.user someone-stole-my-name"
 install:
  - "cpanm --quiet --notest Dist::Zilla"
+ - "cpanm --quiet --notest Dist::Zilla::Plugin::Run::BeforeBuild"
  - "cpanm --quiet --notest Perl::Critic"
  - "cpanm --quiet --notest Perl::Tidy"
  - "dzil authordeps | xargs cpanm --quiet --notest && dzil listdeps --develop | xargs cpanm --quiet --notest"
