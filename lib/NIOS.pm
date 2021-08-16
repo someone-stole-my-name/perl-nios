@@ -6,115 +6,113 @@ package NIOS;
 # AUTHORITY
 
 ## use critic
-use warnings;
-use strict;
+use strictures 2;
 
 use Carp qw(croak);
 use JSON qw(to_json);
 use LWP::UserAgent;
 use MIME::Base64 qw(encode_base64);
 use URI;
+use Role::Tiny;
 use URI::QueryParam;
 
-use constant TIMEOUT => 10; ## no critic (ValuesAndExpressions::ProhibitConstantPragma)
+use Data::Dumper;
 
-sub new {
-  my ( $class, %args ) = @_;
-  my $self = bless {}, $class;
+use Class::Tiny qw(
+  debug insecure password
+  scheme timeout username
+  wapi_addr wapi_version
+  ),
+  {
+  wapi_version => 'v2.7',
+  scheme       => 'https',
+  insecure     => 0,
+  timeout      => 10,
+  debug        => $ENV{NIOS_DEBUG}
+  };
 
-  $self->{debug} = $args{debug} || $ENV{NIOS_DEBUG};
-  $self->{debug} = 0
-    if !defined $self->{'debug'}; ## no critic (ControlStructures::ProhibitPostfixControls)
+sub BUILD {
+  my ( $self, $args ) = @_;
 
-  defined $args{$_}
-    and $self->{$_} = $args{$_}
-    for qw(wapi_version username password scheme insecure timeout wapi_addr); ## no critic (ControlStructures::ProhibitPostfixControls)
-
-  $self->{wapi_version} = 'v2.7'
-    if !defined $self->{'wapi_version'};                                      ## no critic (ControlStructures::ProhibitPostfixControls)
-  $self->{scheme} = 'https'
-    if !defined $self->{'scheme'};                                            ## no critic (ControlStructures::ProhibitPostfixControls)
-  $self->{insecure} = 0
-    if !defined $self->{'insecure'};                                          ## no critic (ControlStructures::ProhibitPostfixControls)
-  $self->{timeout} = TIMEOUT
-    if !defined $self->{'timeout'};                                           ## no critic (ControlStructures::ProhibitPostfixControls)
-
-  defined( $self->{$_} )
+  defined( $self->$_ )
     or croak("$_ is required!")
-    for qw(username password wapi_addr);                                      ## no critic (ControlStructures::ProhibitPostfixControls)
+    for qw(username password wapi_addr); ## no critic (ControlStructures::ProhibitPostfixControls)
 
   ( ( $self->{scheme} eq 'http' ) or ( $self->{scheme} eq 'https' ) )
     or croak("scheme not supported: $self->{scheme}");
 
+  $self->{base_url} =
+      $self->scheme . "://"
+    . $self->wapi_addr
+    . "/wapi/"
+    . $self->wapi_version . "/";
+
   $self->{ua} = LWP::UserAgent->new( timeout => $self->{timeout} );
   $self->{ua}->agent( 'NIOS-perl/' . $NIOS::VERSION );
   $self->{ua}->ssl_opts( verify_hostname => 0, SSL_verify_mode => 0x00 )
-    if $self->{insecure} and $self->{scheme} eq 'https';                      ## no critic (ControlStructures::ProhibitPostfixControls)
+    if $self->{insecure} and $self->{scheme} eq 'https'; ## no critic (ControlStructures::ProhibitPostfixControls)
   $self->{ua}->default_header( 'Accept'       => 'application/json' );
   $self->{ua}->default_header( 'Content-Type' => 'application/json' );
   $self->{ua}->default_header( 'Authorization' => 'Basic '
-      . encode_base64("$self->{username}:$self->{password}") );
-
-  $self->{base_url} =
-    "$self->{scheme}://$self->{'wapi_addr'}/wapi/$self->{'wapi_version'}/";
-
-  return $self;
+      . encode_base64( $self->username . ":" . $self->password ) );
 }
 
-sub DESTROY { }
+sub create {
+  my ( $self, %args ) = @_;
 
-our $AUTOLOAD;
+  defined( $args{$_} )
+    or croak("$_ is required!")
+    for qw(path payload);
 
-sub AUTOLOAD { ## no critic (ClassHierarchies::ProhibitAutoloading)
-  ( my $command = $AUTOLOAD ) =~ s/.*://xms;
-
-  my $method = sub { shift->__do_cmd( $command, @_ ) };
-
-  # Speed up future calls
-  no strict 'refs';     ## no critic (TestingAndDebugging::ProhibitNoStrict)
-  *$AUTOLOAD = $method; ## no critic (References::ProhibitDoubleSigils)
-
-  goto $method;
+  return $self->__request( 'POST', $args{path},
+    ( payload => $args{payload}, params => $args{params} ) );
 }
 
-sub __do_cmd {
-  my ( $self, $command, %args ) = @_;
+sub update {
+  my ( $self, %args ) = @_;
 
-  my %hash;
-  @hash{ 'action', 'resource', 'type' } =
-    $command =~ /^([[:lower:]]+)_?([[:lower:]]+)?_?([[:lower:]]+)?$/xms;
+  defined( $args{$_} )
+    or croak("$_ is required!")
+    for qw(path payload);
 
-  return $self->__std_cmd( 'PUT', %args )
-    if ( $hash{action} and $hash{action} eq 'update' )
-    and ( not $hash{resource} and not $hash{type} );
-
-  return $self->__std_cmd( 'DELETE', %args )
-    if ( $hash{action} and $hash{action} eq 'delete' )
-    and ( not $hash{resource} and not $hash{type} );
-
-  return $self->__std_cmd( 'GET', %args )
-    if ( $hash{action} and $hash{action} eq 'get' ) ## no critic (ControlStructures::ProhibitPostfixControls)
-    and ( not $hash{resource} and not $hash{type} );
-
-  $args{ref} = join q{:}, $hash{type}, $hash{resource};
-
-  return $self->__std_cmd( 'GET', %args )
-    if ( $hash{action} and $hash{action} eq 'get' ) ## no critic (ControlStructures::ProhibitPostfixControls)
-    and ( $hash{resource} and $hash{type} );
-
-  return $self->__std_cmd( 'POST', %args )
-    if ( $hash{action} and $hash{action} eq 'create' ) ## no critic (ControlStructures::ProhibitPostfixControls)
-    and ( $hash{resource} and $hash{type} );
-
-  return;
+  return $self->__request( 'PUT', $args{path},
+    ( payload => $args{payload}, params => $args{params} ) );
 }
 
-sub __std_cmd {
-  my ( $self, $op, %args ) = @_;
+sub get {
+  print STDERR Dumper(@_);
+  my ( $self, %args ) = @_;
 
-  my $ref          = delete $args{ref} or croak('ref is required!');
+  defined( $args{path} )
+    or croak("path is required!");
+
+  return $self->__request( 'GET', $args{path}, ( params => $args{params} ) );
+}
+
+sub delete {
+  my ( $self, %args ) = @_;
+
+  defined( $args{path} )
+    or croak("path is required!");
+
+  return $self->__request( 'DELETE', $args{path}, ( params => $args{params} ) );
+}
+
+sub __request {
+  my ( $self, $op, $path, %args ) = @_;
+
+  my $payload      = delete $args{payload};
   my $params       = delete $args{params};
   my $query_params = q{};
+
+  grep( /(^\Q$op\E$)/, qw(GET POST PUT DELETE) )
+    or die("invalid operation: $op");
+
+  croak("invalid path") unless ( defined $path and length $path );
+
+  if ( $op eq 'PUT' or $op eq 'POST' ) {
+    croak("invalid payload") unless keys %{$payload};
+  }
 
   if ( defined $params ) {
     my $u = URI->new( q{}, 'http' );
@@ -126,10 +124,10 @@ sub __std_cmd {
   }
 
   my $request =
-    HTTP::Request->new( $op, $self->{base_url} . $ref . $query_params );
+    HTTP::Request->new( $op, $self->{base_url} . $path . $query_params );
 
   if ( $op eq 'PUT' or $op eq 'POST' ) {
-    $request->content( to_json( \%args ) );
+    $request->content( to_json($payload) );
   }
 
   return $self->{ua}->request($request);
@@ -159,7 +157,8 @@ NIOS - Perl binding for NIOS
     );
 
 
-    $x = $n->get_a_record(
+    $x = $n->get(
+        path => 'record:a',
         params => {
             _paging           => 1,
             _max_results      => 1,
@@ -173,8 +172,22 @@ NIOS - Perl binding for NIOS
 Perl bindings for L<https://www.infoblox.com/company/why-infoblox/nios-platform/>
 
 =head1 CONSTRUCTOR
- 
+
+=for Pod::Coverage BUILD
+
 =head2 new
+
+The following attributes are required at construction time:
+
+=over
+
+=item * username
+
+=item * password
+
+=item * wapi_addr
+
+=back
 
     my $n = NIOS->new(
         username  => "username",
@@ -216,35 +229,47 @@ Specifies the version of WAPI to use.
 
 B<Default>: v2.7
 
+=head3 C<< debug >>
+
 =head1 Methods
 
-Methods return an L<HTTP::Response> object.
+=over
+
+=item * All methods require a path parameter that can be either a resource type (eg: "record:a") or a WAPI Object reference.
+
+=item * All methods return an L<HTTP::Response> object.
+
+=back
 
 =head3 C<< create >>
 
-    # Create anew 'a' resources of type 'record':
-    $x = $n->create_a_record(
-        name     => "rhds.ext.home",
-        ipv4addr => "10.0.0.1",
-        extattrs => {
-            "Tenant ID"       => { value => "home" },
-            "CMP Type"        => { value => "OpenStack" },
-            "Cloud API Owned" => { value => "True" }
+    # Create a new A record:
+    my $x = $n->create(
+        path => "record:a",
+        payload => {
+            name     => "rhds.ext.home",
+            ipv4addr => "10.0.0.1",
+            extattrs => {
+                "Tenant ID"       => { value => "home" },
+                "CMP Type"        => { value => "OpenStack" },
+                "Cloud API Owned" => { value => "True" }
+            }
         }
     );
 
 =head3 C<< delete >>
 
     # Delete a WAPI Object Reference
-    $x = $n->delete(ref => $object_ref);
+    $x = $n->delete(path => $object_ref);
 
 =head3 C<< get >>
 
-    # List all 'a' resources of type 'record' with:
+    # List all A records with:
     #   pagination
     #   limiting results to 1
     #   returning response as an object
-    $x = $n->get_a_record(
+    $x = $n->get(
+        path   => 'record:a',
         params => {
             _paging           => 1,
             _max_results      => 1,
@@ -256,8 +281,10 @@ Methods return an L<HTTP::Response> object.
 
     # Update a WAPI Object Reference
     $x = $n->update(
-        ref => $object_ref,
-        name => "updated_name"
+        path    => $object_ref,
+        payload => {
+          name => "updated_name"
+        }
     );
 
 =cut

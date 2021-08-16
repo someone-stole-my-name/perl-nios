@@ -1,4 +1,5 @@
 #!/usr/bin/env perl
+use strictures 2;
 use JSON qw(from_json);
 use Mojolicious::Lite -signatures;
 use Data::GUID qw( guid_string );

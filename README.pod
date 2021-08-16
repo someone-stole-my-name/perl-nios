@@ -6,10 +6,12 @@
 
 NIOS - Perl binding for NIOS
 
-=for html <a href="https://www.travis-ci.com/someone-stole-my-name/perl-nios"><img src="https://www.travis-ci.com/someone-stole-my-name/perl-nios.svg?branch=master"></a>
+=head1 VERSION
+
+version 0.001
 
 =head1 SYNOPSIS
- 
+
     # Read below for a list of options
     my $n = NIOS->new(
         username  => "username",
@@ -18,7 +20,8 @@ NIOS - Perl binding for NIOS
     );
 
 
-    $x = $n->get_a_record(
+    $x = $n->get(
+        path => 'record:a',
         params => {
             _paging           => 1,
             _max_results      => 1,
@@ -31,9 +34,29 @@ NIOS - Perl binding for NIOS
 
 Perl bindings for L<https://www.infoblox.com/company/why-infoblox/nios-platform/>
 
+=head1 NAME
+
+NIOS - Perl binding for NIOS
+
+=for html <a href="https://www.travis-ci.com/someone-stole-my-name/perl-nios"><img src="https://www.travis-ci.com/someone-stole-my-name/perl-nios.svg?branch=master"></a>
+
 =head1 CONSTRUCTOR
- 
+
+=for Pod::Coverage BUILD
+
 =head2 new
+
+The following attributes are required at construction time:
+
+=over
+
+=item * username
+
+=item * password
+
+=item * wapi_addr
+
+=back
 
     my $n = NIOS->new(
         username  => "username",
@@ -75,35 +98,47 @@ Specifies the version of WAPI to use.
 
 B<Default>: v2.7
 
+=head3 C<< debug >>
+
 =head1 Methods
 
-Methods return an L<HTTP::Response> object.
+=over
+
+=item * All methods require a path parameter that can be either a resource type (eg: "record:a") or a WAPI Object reference.
+
+=item * All methods return an L<HTTP::Response> object.
+
+=back
 
 =head3 C<< create >>
 
-    # Create anew 'a' resources of type 'record':
-    $x = $n->create_a_record(
-        name     => "rhds.ext.home",
-        ipv4addr => "10.0.0.1",
-        extattrs => {
-            "Tenant ID"       => { value => "home" },
-            "CMP Type"        => { value => "OpenStack" },
-            "Cloud API Owned" => { value => "True" }
+    # Create a new A record:
+    my $x = $n->create(
+        path => "record:a",
+        payload => {
+            name     => "rhds.ext.home",
+            ipv4addr => "10.0.0.1",
+            extattrs => {
+                "Tenant ID"       => { value => "home" },
+                "CMP Type"        => { value => "OpenStack" },
+                "Cloud API Owned" => { value => "True" }
+            }
         }
     );
 
 =head3 C<< delete >>
 
     # Delete a WAPI Object Reference
-    $x = $n->delete(ref => $object_ref);
+    $x = $n->delete(path => $object_ref);
 
 =head3 C<< get >>
 
-    # List all 'a' resources of type 'record' with:
+    # List all A records with:
     #   pagination
     #   limiting results to 1
     #   returning response as an object
-    $x = $n->get_a_record(
+    $x = $n->get(
+        path   => 'record:a',
         params => {
             _paging           => 1,
             _max_results      => 1,
@@ -115,9 +150,23 @@ Methods return an L<HTTP::Response> object.
 
     # Update a WAPI Object Reference
     $x = $n->update(
-        ref => $object_ref,
-        name => "updated_name"
+        path    => $object_ref,
+        payload => {
+          name => "updated_name"
+        }
     );
+
+=head1 AUTHOR
+
+Christian Segundo <chn2guevara [at] dont be evil^^ [.] com>
+
+=head1 COPYRIGHT AND LICENSE
+
+This software is Copyright (c) 2021 by Christian Segundo.
+
+This is free software, licensed under:
+
+  The Artistic License 2.0 (GPL Compatible)
 
 
 =cut

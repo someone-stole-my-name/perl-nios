@@ -1,8 +1,7 @@
 package    # Hide from PAUSE
   Test::SpawnNIOS;
 
-use strict;
-use warnings;
+use strictures 2;
 
 use base qw( Exporter );
 
