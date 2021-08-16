@@ -48,12 +48,25 @@ like(
     'Basic Auth',
 );
 
+my $defaults = NIOS->new(
+    username  => "username",
+    password  => "password",
+    wapi_addr => $nios->addr
+);
+ok($defaults->scheme eq 'https');
+ok($defaults->wapi_version eq 'v2.7');
+ok(!$defaults->insecure);
+ok($defaults->timeout == 10);
+
 my $n = NIOS->new(
     username  => "username",
     password  => "password",
     wapi_addr => $nios->addr,
     scheme    => "http"
 );
+ok($n->scheme eq 'http');
+$n->scheme('https');
+ok($n->scheme eq 'https');
 
 my $x = $n->get( path => 'record:a' );
 ok( $x->{_rc} == 400 );

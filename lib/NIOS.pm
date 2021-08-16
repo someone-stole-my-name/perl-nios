@@ -16,13 +16,7 @@ use URI;
 use Role::Tiny;
 use URI::QueryParam;
 
-use Data::Dumper;
-
-use Class::Tiny qw(
-  debug insecure password
-  scheme timeout username
-  wapi_addr wapi_version
-  ),
+use Class::Tiny qw( password username wapi_addr ),
   {
   wapi_version => 'v2.7',
   scheme       => 'https',
@@ -38,8 +32,8 @@ sub BUILD {
     or croak("$_ is required!")
     for qw(username password wapi_addr); ## no critic (ControlStructures::ProhibitPostfixControls)
 
-  ( ( $self->{scheme} eq 'http' ) or ( $self->{scheme} eq 'https' ) )
-    or croak("scheme not supported: $self->{scheme}");
+  ( ( $self->scheme eq 'http' ) or ( $self->scheme eq 'https' ) )
+    or croak( "scheme not supported: " . $self->scheme );
 
   $self->{base_url} =
       $self->scheme . "://"
@@ -47,10 +41,10 @@ sub BUILD {
     . "/wapi/"
     . $self->wapi_version . "/";
 
-  $self->{ua} = LWP::UserAgent->new( timeout => $self->{timeout} );
+  $self->{ua} = LWP::UserAgent->new( timeout => $self->timeout );
   $self->{ua}->agent( 'NIOS-perl/' . $NIOS::VERSION );
   $self->{ua}->ssl_opts( verify_hostname => 0, SSL_verify_mode => 0x00 )
-    if $self->{insecure} and $self->{scheme} eq 'https'; ## no critic (ControlStructures::ProhibitPostfixControls)
+    if $self->insecure and $self->scheme eq 'https'; ## no critic (ControlStructures::ProhibitPostfixControls)
   $self->{ua}->default_header( 'Accept'       => 'application/json' );
   $self->{ua}->default_header( 'Content-Type' => 'application/json' );
   $self->{ua}->default_header( 'Authorization' => 'Basic '
@@ -80,7 +74,6 @@ sub update {
 }
 
 sub get {
-  print STDERR Dumper(@_);
   my ( $self, %args ) = @_;
 
   defined( $args{path} )
