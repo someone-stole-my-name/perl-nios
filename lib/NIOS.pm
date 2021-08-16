@@ -13,7 +13,6 @@ use JSON qw(to_json);
 use LWP::UserAgent;
 use MIME::Base64 qw(encode_base64);
 use URI;
-use Role::Tiny;
 use URI::QueryParam;
 
 use Class::Tiny qw( password username wapi_addr ),
