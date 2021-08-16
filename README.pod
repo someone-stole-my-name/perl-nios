@@ -102,9 +102,13 @@ B<Default>: v2.7
 
 =head1 Methods
 
+=over
+
 =item * All methods require a path parameter that can be either a resource type (eg: "record:a") or a WAPI Object reference.
 
 =item * All methods return an L<HTTP::Response> object.
+
+=back
 
 =head3 C<< create >>
 
