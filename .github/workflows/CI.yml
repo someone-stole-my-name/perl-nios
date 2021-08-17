@@ -1,0 +1,25 @@
+name: CI
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        perl: [ '5.26', '5.28', '5.30' ]
+    container: perl:${{ matrix.perl }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Install dependencies
+        run: |
+          cpanm --quiet --notest Dist::Zilla
+          cpanm --quiet --notest Perl::Critic
+          cpanm --quiet --notest Perl::Tidy
+          dzil authordeps | xargs cpanm --quiet --notest && dzil listdeps --develop | xargs cpanm --quiet --notest
+      - name: Test release
+        run: dzil test --release
