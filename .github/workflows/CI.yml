@@ -10,13 +10,16 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        perl: [ 26, 28, 30 ]
+        perl: [ 5.26, 5.28, 5.30 ]
     container: perl:${{ matrix.perl }}
     steps:
-      - uses: actions/checkout@v2
-      - name: Run a one-line script
-        run: echo Hello, world!
-      - name: Run a multi-line script
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Install dependencies
         run: |
-          echo Add other actions to build,
-          echo test, and deploy your project.
+          cpanm --quiet --notest Dist::Zilla
+          cpanm --quiet --notest Perl::Critic
+          cpanm --quiet --notest Perl::Tidy
+          dzil authordeps | xargs cpanm --quiet --notest && dzil listdeps --develop | xargs cpanm --quiet --notest
+      - name: Test release
+        run: dzil test --release
