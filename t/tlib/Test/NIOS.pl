@@ -15,7 +15,8 @@ app->log->level('error');
 
 plugin 'basic_auth';
 
-under sub ($c) {
+under sub {
+  my $c = shift;
   return 1 if $c->basic_auth(
     realm => sub {
       return 1
@@ -27,7 +28,8 @@ under sub ($c) {
 };
 
 group {
-  under '/wapi/v2.7/record:a' => sub ($c) {
+  under '/wapi/v2.7/record:a' => sub {
+    my $c          = shift;
     my $conditions = { paging => 0 };
 
     my $parameters = $c->req->params->to_hash;
@@ -55,7 +57,8 @@ group {
     return undef; ## no critic (Subroutines::ProhibitExplicitReturnUndef)
   };
 
-  del '/*ref' => sub ($c) {
+  del '/*ref' => sub {
+    my $c                = shift;
     my $record_exists    = 0;
     my $record_exists_at = 0;
     foreach (@records_a) {
@@ -71,7 +74,8 @@ group {
     return $c->render( text => "deleted", status => 200 );
   };
 
-  put '/*ref' => sub ($c) {
+  put '/*ref' => sub {
+    my $c                = shift;
     my $record_exists    = 0;
     my $record_exists_at = 0;
     foreach (@records_a) {
@@ -94,8 +98,8 @@ group {
     );
   };
 
-  post q{} => sub ($c) {
-
+  post q{} => sub {
+    my $c = shift;
     defined $c->req->json->{$_}
       or return $c->render( text => "Bad Payload", status => 400 )
       for qw(name ipv4addr);
@@ -109,8 +113,8 @@ group {
     $c->render( text => "\"" . $c->req->json->{_ref} . "\"", status => 201 );
   };
 
-  get q{} => sub ($c) {
-
+  get q{} => sub {
+    my $c = shift;
     if ( !%{ $c->req->params->to_hash } and $#records_a >= 1000 ) {
       return $c->render(
         format   => 'json',

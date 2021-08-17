@@ -1,5 +1,5 @@
 ## no critic
-package NIOS;
+package DNS::NIOS;
 
 # ABSTRACT: Perl binding for NIOS
 # VERSION
@@ -41,7 +41,7 @@ sub BUILD {
     . $self->wapi_version . "/";
 
   $self->{ua} = LWP::UserAgent->new( timeout => $self->timeout );
-  $self->{ua}->agent( 'NIOS-perl/' . $NIOS::VERSION );
+  $self->{ua}->agent( 'NIOS-perl/' . $DNS::NIOS::VERSION );
   $self->{ua}->ssl_opts( verify_hostname => 0, SSL_verify_mode => 0x00 )
     if $self->insecure and $self->scheme eq 'https'; ## no critic (ControlStructures::ProhibitPostfixControls)
   $self->{ua}->default_header( 'Accept'       => 'application/json' );

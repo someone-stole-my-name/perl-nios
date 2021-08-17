@@ -3,7 +3,7 @@
 use strictures 2;
 
 use JSON qw(from_json);
-use NIOS;
+use DNS::NIOS;
 use Test::Fatal;
 use Test::More;
 use Data::Dumper;
@@ -15,14 +15,14 @@ my $nios = Test::SpawnNIOS->nios();
 END { $nios->shitdown() if $nios }
 
 like(
-    exception { my $n = NIOS->new() },
+    exception { my $n = DNS::NIOS->new() },
     qr/\w+ is required!/,
     'Missing required connection parameters',
 );
 
 like(
     exception {
-        my $n = NIOS->new(
+        my $n = DNS::NIOS->new(
             username  => "x",
             password  => "x",
             wapi_addr => "x",
@@ -36,7 +36,7 @@ like(
 like(
     exception {
         die(
-            NIOS->new(
+            DNS::NIOS->new(
                 username  => "bad_username",
                 password  => "bad_password",
                 wapi_addr => $nios->addr,
@@ -48,25 +48,25 @@ like(
     'Basic Auth',
 );
 
-my $defaults = NIOS->new(
+my $defaults = DNS::NIOS->new(
     username  => "username",
     password  => "password",
     wapi_addr => $nios->addr
 );
-ok($defaults->scheme eq 'https');
-ok($defaults->wapi_version eq 'v2.7');
-ok(!$defaults->insecure);
-ok($defaults->timeout == 10);
+ok( $defaults->scheme eq 'https' );
+ok( $defaults->wapi_version eq 'v2.7' );
+ok( !$defaults->insecure );
+ok( $defaults->timeout == 10 );
 
-my $n = NIOS->new(
+my $n = DNS::NIOS->new(
     username  => "username",
     password  => "password",
     wapi_addr => $nios->addr,
     scheme    => "http"
 );
-ok($n->scheme eq 'http');
+ok( $n->scheme eq 'http' );
 $n->scheme('https');
-ok($n->scheme eq 'https');
+ok( $n->scheme eq 'https' );
 
 my $x = $n->get( path => 'record:a' );
 ok( $x->{_rc} == 400 );
