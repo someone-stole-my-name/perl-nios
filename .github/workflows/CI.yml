@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        perl: [ 5.26, 5.28, 5.30 ]
+        perl: [ '5.26', '5.28', '5.30' ]
     container: perl:${{ matrix.perl }}
     steps:
       - name: Checkout
