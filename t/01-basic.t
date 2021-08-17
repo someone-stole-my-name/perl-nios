@@ -3,7 +3,7 @@
 use strictures 2;
 
 use JSON qw(from_json);
-use NIOS;
+use DNS::NIOS;
 use Test::Fatal;
 use Test::More;
 use Data::Dumper;

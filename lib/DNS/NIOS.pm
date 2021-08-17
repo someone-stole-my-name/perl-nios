@@ -1,5 +1,5 @@
 ## no critic
-package NIOS;
+package DNS::NIOS;
 
 # ABSTRACT: Perl binding for NIOS
 # VERSION
