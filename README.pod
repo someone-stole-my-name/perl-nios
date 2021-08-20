@@ -4,7 +4,7 @@
 
 =head1 NAME
 
-NIOS - Perl binding for NIOS
+DNS::NIOS - Perl binding for NIOS
 
 =head1 VERSION
 
@@ -158,7 +158,7 @@ B<Default>: v2.7
 
 =head1 AUTHOR
 
-Christian Segundo <chn2guevara [at] dont be evil^^ [.] com>
+Christian Segundo <ssmn@cpan.org>
 
 =head1 COPYRIGHT AND LICENSE
 
