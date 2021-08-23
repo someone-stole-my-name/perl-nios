@@ -14,6 +14,10 @@ use LWP::UserAgent;
 use MIME::Base64 qw(encode_base64);
 use URI;
 use URI::QueryParam;
+use DNS::NIOS::Response;
+use Role::Tiny::With;
+
+with 'DNS::NIOS::ApiMethods';
 
 use Class::Tiny qw( password username wapi_addr ),
   {
@@ -122,7 +126,8 @@ sub __request {
     $request->content( to_json($payload) );
   }
 
-  return $self->{ua}->request($request);
+  return DNS::NIOS::Response->new(
+    _http_response => $self->{ua}->request($request) );
 }
 
 1;
@@ -130,14 +135,6 @@ sub __request {
 __END__
 
 =pod
-
-=encoding UTF-8
-
-=head1 NAME
-
-NIOS - Perl binding for NIOS
-
-=for html <a href="https://github.com/someone-stole-my-name/perl-nios/actions/workflows/CI.yml"><img src="https://github.com/someone-stole-my-name/perl-nios/actions/workflows/CI.yml/badge.svg?branch=master"></a>
 
 =head1 SYNOPSIS
  
@@ -157,7 +154,7 @@ NIOS - Perl binding for NIOS
             _return_as_object => 1
         }
     );
-    say from_json( $x->decoded_content )->{result}[0]->{_ref};
+    say $x->content->{result}[0]->{_ref};
 
 =head1 DESCRIPTION
 
@@ -229,7 +226,7 @@ B<Default>: v2.7
 
 =item * All methods require a path parameter that can be either a resource type (eg: "record:a") or a WAPI Object reference.
 
-=item * All methods return an L<HTTP::Response> object.
+=item * All methods return a L<DNS::NIOS::Response> object.
 
 =back
 
