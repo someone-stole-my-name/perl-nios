@@ -1,7 +1,7 @@
 ## no critic
 package DNS::NIOS::Traits::AutoPager;
 
-# ABSTRACT: Handle pagination automagically
+# ABSTRACT: Handle pagination automatically
 # VERSION
 # AUTHORITY
 
@@ -9,7 +9,6 @@ package DNS::NIOS::Traits::AutoPager;
 use strictures 2;
 use namespace::clean;
 use Role::Tiny;
-use Data::Dumper;
 
 requires qw( get );
 
