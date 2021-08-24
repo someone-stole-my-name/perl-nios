@@ -137,6 +137,15 @@ group {
 
       if ( %{ $c->req->params->to_hash }{_page_id} ) {
         my $requested_page = %{ $c->req->params->to_hash }{_page_id};
+        if ( $requested_page + 1 >= $#records_a ) {
+          return $c->render(
+            json => {
+              result => sub { \@_ }
+                ->( @records_a[ $requested_page .. $requested_page ] )
+            },
+            status => 200
+          );
+        }
         return $c->render(
           json => {
             next_page_id => ++$requested_page,

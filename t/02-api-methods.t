@@ -18,7 +18,7 @@ my $n = DNS::NIOS->new(
   password  => "password",
   wapi_addr => $nios->addr,
   scheme    => "http",
-  traits    => [ 'DNS::NIOS::Traits::ApiMethods', 'DNS::NIOS::Traits::AutoPager' ]
+  traits    => ['DNS::NIOS::Traits::ApiMethods']
 );
 
 my $x = $n->create_a_record(
@@ -33,5 +33,15 @@ my $x = $n->create_a_record(
   }
 );
 ok( $x->code == 201 );
+my $ref = $x->content;
+
+$x = $n->list_a_records(
+  params => {
+    _paging           => 1,
+    _max_results      => 1,
+    _return_as_object => 1
+  }
+);
+ok( $ref eq $x->content->{result}[0]->{_ref} );
 
 done_testing();
