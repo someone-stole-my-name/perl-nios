@@ -29,7 +29,6 @@ my $response_length = scalar( @{$x} );
 
 $x = $n->list_a_records( params => { _max_results => 200 } );
 ok( ref($x) eq 'ARRAY' );
-print STDERR Dumper( scalar( @{$x} ) );
 ok( scalar( @{$x} ) != $response_length );
 ok( scalar( @{$x} ) == 200 );
 

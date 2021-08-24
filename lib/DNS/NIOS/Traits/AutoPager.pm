@@ -35,9 +35,7 @@ around 'get' => sub {
 
   push( @responses, $response );
   while ( $response->content->{next_page_id} ) {
-    if ($max_results) {
-      last if $#responses >= $max_results - 1;
-    }
+    last if $max_results and _is_max( $max_results, \@responses );
     %{ $args{params} } =
       ( %{ $args{params} }, _page_id => $response->content->{next_page_id} );
     $response = $orig->( $self, %args );
@@ -46,6 +44,19 @@ around 'get' => sub {
 
   return \@responses;
 };
+
+sub _is_max {
+  my ( $max, $responses ) = @_;
+
+  my $i = 0;
+  foreach ( @{$responses} ) {
+    foreach ( $_->{results} ) {
+      last if $i >= $max;
+      $i++;
+    }
+  }
+  return $i >= $max;
+}
 
 1;
 
