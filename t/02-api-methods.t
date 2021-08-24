@@ -17,7 +17,8 @@ my $n = DNS::NIOS->new(
   username  => "username",
   password  => "password",
   wapi_addr => $nios->addr,
-  scheme    => "http"
+  scheme    => "http",
+  traits    => [ 'DNS::NIOS::Traits::ApiMethods', 'DNS::NIOS::Traits::AutoPager' ]
 );
 
 my $x = $n->create_a_record(

@@ -17,9 +17,7 @@ use URI::QueryParam;
 use DNS::NIOS::Response;
 use Role::Tiny::With;
 
-with 'DNS::NIOS::ApiMethods';
-
-use Class::Tiny qw( password username wapi_addr ),
+use Class::Tiny qw( password username wapi_addr traits ),
   {
   wapi_version => 'v2.7',
   scheme       => 'https',
@@ -52,6 +50,12 @@ sub BUILD {
   $self->{ua}->default_header( 'Content-Type' => 'application/json' );
   $self->{ua}->default_header( 'Authorization' => 'Basic '
       . encode_base64( $self->username . ":" . $self->password ) );
+
+  if ( $self->traits ) {
+    foreach ( @{ $self->traits } ) {
+      with $_;
+    }
+  }
 }
 
 sub create {
@@ -219,6 +223,10 @@ Specifies the version of WAPI to use.
 B<Default>: v2.7
 
 =head3 C<< debug >>
+
+=head3 C<< traits >>
+
+List of traits to apply, see L<DNS::NIOS::Traits>.
 
 =head1 Methods
 
