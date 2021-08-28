@@ -18,8 +18,6 @@ jobs:
       - name: Install dependencies
         run: |
           cpanm --quiet --notest Dist::Zilla
-          cpanm --quiet --notest Perl::Critic
-          cpanm --quiet --notest Perl::Tidy
           dzil authordeps | xargs cpanm --quiet --notest && dzil listdeps --develop | xargs cpanm --quiet --notest
       - name: Test release
         run: dzil test --release
