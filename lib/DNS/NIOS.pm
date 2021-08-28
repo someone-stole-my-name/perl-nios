@@ -164,6 +164,15 @@ __END__
 
 Perl bindings for L<https://www.infoblox.com/company/why-infoblox/nios-platform/>
 
+=head2 Normal usage
+
+Normally, you will add some traits to the client, primarily L<DNS::NIOS::Traits::ApiMethods>
+since it provides methods for some endpoints.
+
+=head2 Minimal usage
+
+Without any traits, DNS::NIOS provides access to all API endpoints using the methods described below.
+
 =head1 CONSTRUCTOR
 
 =for Pod::Coverage BUILD
@@ -172,13 +181,19 @@ Perl bindings for L<https://www.infoblox.com/company/why-infoblox/nios-platform/
 
 The following attributes are required at construction time:
 
-=over
+=over 4
 
-=item * username
+=item * C<username>
 
-=item * password
+Configures the username to use to authenticate the connection to the remote instance of NIOS.
 
-=item * wapi_addr
+=item * C<password>
+
+Specifies the password to use to authenticate the connection to the remote instance of NIOS.
+
+=item * C<wapi_addr>
+
+DNS hostname or address for connecting to the remote instance of NIOS WAPI.
 
 =back
 
@@ -188,45 +203,33 @@ The following attributes are required at construction time:
         wapi_addr => "10.0.0.1",
     );
 
-=head3 C<< insecure >>
+Optional attributes:
 
-Enable or disable verifying SSL certificates when C<< scheme >> is C<< https >>.
+=over 4
 
-B<Default>: false
+=item * C<insecure>
 
-=head3 C<< password >>
+Enable or disable verifying SSL certificates when C<scheme> is C<https>. Default is C<false>.
 
-Specifies the password to use to authenticate the connection to the remote instance of NIOS.
+=item * C<scheme>
 
-=head3 C<< scheme >>
+Default is C<https>.
 
-B<Default>: https
+=item * C<timeout>
 
-=head3 C<< timeout >>
+The amount of time before to wait before receiving a response. Default is C<10>.
 
-The amount of time before to wait before receiving a response.
+=item * C<wapi_version>
 
-B<Default>: 10
+Specifies the version of WAPI to use. Default is C<v2.7>.
 
-=head3 C<< username >>
+=item * C<debug>
 
-Configures the username to use to authenticate the connection to the remote instance of NIOS.
-
-=head3 C<< wapi_addr >>
-
-DNS hostname or address for connecting to the remote instance of NIOS WAPI.
-
-=head3 C<< wapi_version >>
-
-Specifies the version of WAPI to use.
-
-B<Default>: v2.7
-
-=head3 C<< debug >>
-
-=head3 C<< traits >>
+=item * C<traits>
 
 List of traits to apply, see L<DNS::NIOS::Traits>.
+
+=back
 
 =head1 Methods
 
@@ -238,7 +241,7 @@ List of traits to apply, see L<DNS::NIOS::Traits>.
 
 =back
 
-=head3 C<< create >>
+=head2 create
 
     # Create a new A record:
     my $x = $n->create(
@@ -254,12 +257,12 @@ List of traits to apply, see L<DNS::NIOS::Traits>.
         }
     );
 
-=head3 C<< delete >>
+=head2 delete
 
     # Delete a WAPI Object Reference
     $x = $n->delete(path => $object_ref);
 
-=head3 C<< get >>
+=head2 get
 
     # List all A records with:
     #   pagination
@@ -274,7 +277,7 @@ List of traits to apply, see L<DNS::NIOS::Traits>.
         }
     );
 
-=head3 C<< update >>
+=head2 update
 
     # Update a WAPI Object Reference
     $x = $n->update(

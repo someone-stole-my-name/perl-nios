@@ -15,10 +15,10 @@ like(
 like(
   exception {
     my $n = DNS::NIOS->new(
-      username  => "x",
-      password  => "x",
-      wapi_addr => "x",
-      scheme    => "x"
+      username  => qw[x],
+      password  => qw[x],
+      wapi_addr => qw[x],
+      scheme    => qw[x]
     )
   },
   qr/^scheme not supported: x/,
@@ -26,9 +26,9 @@ like(
 );
 
 my $defaults = DNS::NIOS->new(
-  username  => "username",
-  password  => "password",
-  wapi_addr => "localhost:80"
+  username  => qw[x],
+  password  => qw[x],
+  wapi_addr => qw[x]
 );
 
 ok( $defaults->scheme eq 'https' );

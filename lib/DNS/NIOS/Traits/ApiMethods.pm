@@ -92,9 +92,9 @@ __END__
 
 =head1 DESCRIPTION
 
-This role provides convenient methods for calling API endpoints.
+This trait provides convenient methods for calling some API endpoints.
 
-Theese methods are simply sugar around the basic c<create> and c<get> methods. For example, these two calls are equivalent:
+Methods are simply sugar around the basic c<create> and c<get> methods. For example, these two calls are equivalent:
 
     $n->list_a_records();
     $n->get( path => 'record:a');

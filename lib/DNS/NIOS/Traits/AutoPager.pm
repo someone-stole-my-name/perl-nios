@@ -65,8 +65,9 @@ __END__
 
 =head1 DESCRIPTION
 
-This role replaces the get method to handle pagination automatically, it turns
-the result of all get operations into an ArrayRef of DNS::NIOS::Response.
-When _max_results is present in the request, it is honored to some extent.
+This trait replaces the C<get> method to handle pagination automatically, it turns
+the result of all get operations into an ArrayRef of L<DNS::NIOS::Response>.
+
+When C<_max_results> is present in the request, it is honored to some extent.
 
 =cut
