@@ -10,6 +10,8 @@ use Test::More;
 use lib 't/tlib';
 use Test::SpawnNIOS;
 
+use Data::Dumper;
+
 my $nios = Test::SpawnNIOS->nios();
 END { $nios->shitdown() if $nios }
 
@@ -85,6 +87,7 @@ $x = $n->get(
     _return_as_object => 1
   }
 );
+print STDERR Dumper($x->content);
 ok( $ref eq $x->content->{result}[0]->{_ref} );
 
 $x = $n->update(
