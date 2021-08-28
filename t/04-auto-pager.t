@@ -2,14 +2,13 @@
 
 use strictures 2;
 
-use JSON qw(from_json);
 use DNS::NIOS;
+
 use Test::Fatal;
 use Test::More;
 
 use lib 't/tlib';
 use Test::SpawnNIOS;
-use Data::Dumper;
 
 my $nios = Test::SpawnNIOS->nios();
 END { $nios->shitdown() if $nios }
