@@ -87,6 +87,7 @@ $x = $n->get(
     _return_as_object => 1
   }
 );
+print STDERR "\n$ref\n";
 print STDERR Dumper($x->content);
 ok( $ref eq $x->content->{result}[0]->{_ref} );
 
