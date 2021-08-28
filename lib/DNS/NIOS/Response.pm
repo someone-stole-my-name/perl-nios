@@ -67,6 +67,9 @@ sub content {
   }
   catch {
     $h = $self->_http_response->decoded_content;
+
+    # For some reason <5.28 returns a quoted string during test
+    $h =~ s/^"|"$//g;
   };
   return $h;
 }
