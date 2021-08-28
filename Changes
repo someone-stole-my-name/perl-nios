@@ -2,6 +2,8 @@ Revision history for NIOS
 
 {{$NEXT}}
 
+0.002     2021-08-28 21:36:41+02:00 Europe/Madrid
+
   * Improve mock server
   * Add sweet api methods as a trait
   * Return a custom response object
