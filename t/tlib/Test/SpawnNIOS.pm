@@ -38,7 +38,7 @@ sub nios {
     $self->shitdown and die;
   }
   elsif ( defined $pid ) {
-    exec( $self->{nios_path} . " daemon -l http://" . $self->{addr} );
+    exec( "$^X $self->{nios_path} daemon -l http://$self->{addr}" );
     warn "## '@_': $!";
     exit(1);
   }
