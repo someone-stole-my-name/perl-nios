@@ -2,6 +2,9 @@ Revision history for NIOS
 
 {{$NEXT}}
 
+  * Add missing dependency
+  * Fix readme
+
 0.002     2021-08-28 21:36:41+02:00 Europe/Madrid
 
   * Improve mock server
