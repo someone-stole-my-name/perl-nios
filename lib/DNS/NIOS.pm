@@ -231,7 +231,7 @@ List of traits to apply, see L<DNS::NIOS::Traits>.
 
 =back
 
-=head1 Methods
+=head1 METHODS
 
 =over
 
