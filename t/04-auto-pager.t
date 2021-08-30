@@ -10,6 +10,10 @@ use Test::More;
 use lib 't/tlib';
 use Test::SpawnNIOS;
 
+if ( $] < 5.020 ) {
+  plan skip_all => 'wrong version';
+}
+
 my $nios = Test::SpawnNIOS->nios();
 END { $nios->shitdown() if $nios }
 
