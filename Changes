@@ -2,6 +2,10 @@ Revision history for NIOS
 
 {{$NEXT}}
 
+0.005     2021-09-07 22:27:59+02:00 Europe/Madrid
+
+  * Add missing dependency
+
 0.004     2021-08-29 13:45:25+02:00 Europe/Madrid
 
   * Improve test suite
